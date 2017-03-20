@@ -1,7 +1,7 @@
 # Machine Learning Engineer Nanodegree
 ## Capstone Proposal
-Joe Udacity  
-December 31st, 2050
+Rob Fitch 
+April 1st, 2017
 
 ## Proposal
 _(approx. 2-3 pages)_
@@ -10,6 +10,9 @@ _(approx. 2-3 pages)_
 _(approx. 1-2 paragraphs)_
 
 In this section, provide brief details on the background information of the domain from which the project is proposed. Historical information relevant to the project should be included. It should be clear how or why a problem in the domain can or should be solved. Related academic research should be appropriately cited in this section, including why that research is relevant. Additionally, a discussion of your personal motivation for investigating a particular problem in the domain is encouraged but not required.
+
+Micromouse is an applied autonomous robotics competition dating to the late 1970s. The competing robots are required to navigate a maze that may include dead ends and loops. Navigation is judged in two discrete steps. First, the robot is given the opportunity to explore the maze. Then, it is required to navigate from the same starting position to the goal as quickly as possible. A successful micromouse competitor will track its location, efficiently explore its surroundings and calculate a best path to the goal.  
+
 
 ### Problem Statement
 _(approx. 1 paragraph)_
