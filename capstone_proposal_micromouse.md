@@ -13,6 +13,7 @@ In this section, provide brief details on the background information of the doma
 
 Micromouse is an applied autonomous robotics competition dating to the late 1970s. The competing robots are required to navigate a maze that may include dead ends and loops. Navigation is judged in two discrete steps. First, the robot is given the opportunity to explore the maze. Then, it is required to navigate from the same starting position to the goal as quickly as possible. A successful micromouse competitor will track its location, efficiently explore its surroundings and calculate a best path to the goal.  
 
+These competitions encourage the development of methods for autonomous robots to handle novel situations encountered in the world. They also require the robot to compensate for flaws in hardware and the imperfect nature of real world applications. Solving these challenges allows robots to be deployed in a wider variety of situations.  
 
 ### Problem Statement
 _(approx. 1 paragraph)_
