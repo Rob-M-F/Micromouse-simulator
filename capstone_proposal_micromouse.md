@@ -20,6 +20,8 @@ _(approx. 1 paragraph)_
 
 In this section, clearly describe the problem that is to be solved. The problem described should be well defined and should have at least one relevant potential solution. Additionally, describe the problem thoroughly such that it is clear that the problem is quantifiable (the problem can be expressed in mathematical or logical terms) , measurable (the problem can be measured by some metric and clearly observed), and replicable (the problem can be reproduced and occurs more than once).
 
+This project will simulate a micromouse competitor. The virtual micromouse will navigate a square maze of 12 to 16 cells on a side. It will be assumed to be facing in a cardinal direction and centered in the current cell. The robot is limited to the following directions: forward, rotate clockwise 90 degrees or, rotate counter clockwise 90 degrees. After each direction, it may move 1 to 3 cells. These conditions require that comparitive improvements occur in graph exploration and optimization.  
+
 ### Datasets and Inputs
 _(approx. 2-3 paragraphs)_
 
