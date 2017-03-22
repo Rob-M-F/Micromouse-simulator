@@ -20,12 +20,16 @@ _(approx. 1 paragraph)_
 
 In this section, clearly describe the problem that is to be solved. The problem described should be well defined and should have at least one relevant potential solution. Additionally, describe the problem thoroughly such that it is clear that the problem is quantifiable (the problem can be expressed in mathematical or logical terms) , measurable (the problem can be measured by some metric and clearly observed), and replicable (the problem can be reproduced and occurs more than once).
 
-This project will simulate a micromouse competitor. The virtual micromouse will navigate a square maze of 12 to 16 cells on a side. It will be assumed to be facing in a cardinal direction and centered in the current cell. The robot is limited to the following directions: forward, rotate clockwise 90 degrees or, rotate counter clockwise 90 degrees. After each direction, it may move 1 to 3 cells. These conditions require that comparitive improvements occur in graph exploration and optimization.  
+This project will simulate a micromouse robot. The virtual robot will navigate a square maze of 12 to 16 cells on a side. It will be assumed to be facing in a cardinal direction and centered in the current cell. The robot is limited to the following directions: forward, rotate clockwise 90 degrees or, rotate counter clockwise 90 degrees. After each direction, it may move 1 to 3 cells. These conditions require that comparitive improvements occur in graph exploration and optimization.  
 
 ### Datasets and Inputs
 _(approx. 2-3 paragraphs)_
 
 In this section, the dataset(s) and/or input(s) being considered for the project should be thoroughly described, such as how they relate to the problem and why they should be used. Information such as how the dataset or input is (was) obtained, and the characteristics of the dataset or input, should be included with relevant references and citations as necessary It should be clear how the dataset(s) or input(s) will be used in the project and whether their use is appropriate given the context of the problem.
+
+The dataset for this simulation will be comma separated files, each containing an encoded maze. Udacity has provided 3 test mazes, measuring 12, 14 and 16 cells respectively.
+
+At each time step of the simulation, the virtual robot will receive 3 numerical inputs. The inputs indicate the distance to the nearest wall from the front, left and right sensors.
 
 ### Solution Statement
 _(approx. 1 paragraph)_
@@ -36,6 +40,8 @@ In this section, clearly describe a solution to the problem. The solution should
 _(approximately 1-2 paragraphs)_
 
 In this section, provide the details for a benchmark model or result that relates to the domain, problem statement, and intended solution. Ideally, the benchmark model or result contextualizes existing methods or known information in the domain and problem given, which could then be objectively compared to the solution. Describe how the benchmark model or result is measurable (can be measured by some metric and clearly observed) with thorough detail.
+
+The benchmark for this simulation will be a depth first search for the exploratory round, with the successful route being used for the speed round. While this will not garuntee the fastest time, it should be substantially faster than a breadth first search. This algorithm will be run 3 times per maze with the fastest time on each taken as the benchmark.
 
 ### Evaluation Metrics
 _(approx. 1-2 paragraphs)_
