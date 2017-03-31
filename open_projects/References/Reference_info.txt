@@ -1,3 +1,4 @@
 001	https://madan.wordpress.com/2006/07/24/micromouse-maze-solving-algorithm/
 002	http://robotics.usc.edu/~harsh/docs/micromouse.pdf
 003	http://timsengineeringblog.weebly.com/micromouse.html
+004	http://web.science.mq.edu.au/~len/preprint/gibb.acsc97.pdf
