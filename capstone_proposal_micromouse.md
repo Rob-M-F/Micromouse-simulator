@@ -9,7 +9,9 @@ _(approx. 2-3 pages)_
 ### Domain Background
 _(approx. 1-2 paragraphs)_
 
-In this section, provide brief details on the background information of the domain from which the project is proposed. Historical information relevant to the project should be included. It should be clear how or why a problem in the domain can or should be solved. Related academic research should be appropriately cited in this section, including why that research is relevant. Additionally, a discussion of your personal motivation for investigating a particular problem in the domain is encouraged but not required.
+Micromouse competitions date back to the 1970s, requiring the robots to explore a novel maze and plot a best path through it. These competitions narrow this problem field down to allow competitive focus on application of autonomous action planning. The robot must be able to evaluate its surroundings and plan a course of action that meets the current situations framework of restrictions.
+
+These competitions encourage the development of methods for autonomous robots to handle novel situations encountered in the world. They also require the robot to compensate for flaws in hardware and the imperfect nature of real world applications. Solving these challenges allows robots to be deployed in a wider variety of situations, with less direct oversight. This has value in many aspects of society and industry.  
 
 Micromouse is an applied autonomous robotics competition dating to the late 1970s. The competing robots are required to navigate a maze that may include dead ends and loops. Navigation is judged in two discrete steps. First, the robot is given the opportunity to explore the maze. Then, it is required to navigate from the same starting position to the goal as quickly as possible. A successful micromouse competitor will track its location, efficiently explore its surroundings and calculate a best path to the goal.  
 
@@ -18,14 +20,19 @@ These competitions encourage the development of methods for autonomous robots to
 ### Problem Statement
 _(approx. 1 paragraph)_
 
-In this section, clearly describe the problem that is to be solved. The problem described should be well defined and should have at least one relevant potential solution. Additionally, describe the problem thoroughly such that it is clear that the problem is quantifiable (the problem can be expressed in mathematical or logical terms) , measurable (the problem can be measured by some metric and clearly observed), and replicable (the problem can be reproduced and occurs more than once).
+This simulation will attempt to create an micromouse robot under ideal conditions. The robot will be required to explore a square maze of width 12 to 14. The robot will be assumed to be facing a cardinal direction and to occupy the center of the current cell. At each time step, it will be allowed to rotate 90 degree in either direction or continue straight. After each opportunity to turn, the robot may choose to move 1 to 3 cells forward. The robot will be permitted to explore and map the maze prior to a best path attempt. A penalty of 1/30th of the exploration time will be applied to the time for the best path attempt, encouraging efficient exploration.  
 
 This project will simulate a micromouse robot. The virtual robot will navigate a square maze of 12 to 16 cells on a side. It will be assumed to be facing in a cardinal direction and centered in the current cell. The robot is limited to the following directions: forward, rotate clockwise 90 degrees or, rotate counter clockwise 90 degrees. After each direction, it may move 1 to 3 cells. These conditions require that comparitive improvements occur in graph exploration and optimization.  
 
 ### Datasets and Inputs
 _(approx. 2-3 paragraphs)_
 
-In this section, the dataset(s) and/or input(s) being considered for the project should be thoroughly described, such as how they relate to the problem and why they should be used. Information such as how the dataset or input is (was) obtained, and the characteristics of the dataset or input, should be included with relevant references and citations as necessary It should be clear how the dataset(s) or input(s) will be used in the project and whether their use is appropriate given the context of the problem.
+In this section, the dataset(s) and/or input(s) being considered for the project should be thoroughly described, such as how they relate to the problem and why they should be used. 
+Information such as how the dataset or input is (was) obtained, and the characteristics of the dataset or input, should be included with relevant references and citations as necessary It should be clear how the dataset(s) or input(s) will be used in the project and whether their use is appropriate given the context of the problem.
+
+At each time step of the simulation, the virtual robot will receive 3 numerical inputs approximating range sensors. The inputs indicate the distance to the nearest wall from the front, left and right sensors. To determine the correct inputs for each cell, encoded maze files will be used. The mazes are provided by Udacity and include 3 layouts, measuring 12, 14 and 16 cells respectively. These mazes are designed to challenge the pathfinding ability of the robot. 
+
+*possibly generate new mazes*
 
 The dataset for this simulation will be comma separated files, each containing an encoded maze. Udacity has provided 3 test mazes, measuring 12, 14 and 16 cells respectively.
 
