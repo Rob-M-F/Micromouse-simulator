@@ -13,52 +13,45 @@ Micromouse competitions date back to the 1970s, requiring the robots to explore 
 
 These competitions encourage the development of methods for autonomous robots to handle novel situations encountered in the world. They also require the robot to compensate for flaws in hardware and the imperfect nature of real world applications. Solving these challenges allows robots to be deployed in a wider variety of situations, with less direct oversight. This has value in many aspects of society and industry.  
 
-Micromouse is an applied autonomous robotics competition dating to the late 1970s. The competing robots are required to navigate a maze that may include dead ends and loops. Navigation is judged in two discrete steps. First, the robot is given the opportunity to explore the maze. Then, it is required to navigate from the same starting position to the goal as quickly as possible. A successful micromouse competitor will track its location, efficiently explore its surroundings and calculate a best path to the goal.  
-
-These competitions encourage the development of methods for autonomous robots to handle novel situations encountered in the world. They also require the robot to compensate for flaws in hardware and the imperfect nature of real world applications. Solving these challenges allows robots to be deployed in a wider variety of situations.  
 
 ### Problem Statement
 _(approx. 1 paragraph)_
 
 This simulation will attempt to create an micromouse robot under ideal conditions. The robot will be required to explore a square maze of width 12 to 14. The robot will be assumed to be facing a cardinal direction and to occupy the center of the current cell. At each time step, it will be allowed to rotate 90 degree in either direction or continue straight. After each opportunity to turn, the robot may choose to move 1 to 3 cells forward. The robot will be permitted to explore and map the maze prior to a best path attempt. A penalty of 1/30th of the exploration time will be applied to the time for the best path attempt, encouraging efficient exploration.  
 
-This project will simulate a micromouse robot. The virtual robot will navigate a square maze of 12 to 16 cells on a side. It will be assumed to be facing in a cardinal direction and centered in the current cell. The robot is limited to the following directions: forward, rotate clockwise 90 degrees or, rotate counter clockwise 90 degrees. After each direction, it may move 1 to 3 cells. These conditions require that comparitive improvements occur in graph exploration and optimization.  
 
 ### Datasets and Inputs
 _(approx. 2-3 paragraphs)_
 
-In this section, the dataset(s) and/or input(s) being considered for the project should be thoroughly described, such as how they relate to the problem and why they should be used. 
-Information such as how the dataset or input is (was) obtained, and the characteristics of the dataset or input, should be included with relevant references and citations as necessary It should be clear how the dataset(s) or input(s) will be used in the project and whether their use is appropriate given the context of the problem.
+At each time step of the simulation, the virtual robot will receive 3 numerical inputs approximating range sensors. The inputs indicate the distance to the nearest wall from the front, left and right sensors. To determine the correct inputs for each cell, encoded maze files will be used. The mazes are provided by Udacity and include 3 layouts, measuring 12, 14 and 16 cells respectively. These mazes are designed to challenge the pathfinding ability of the robot.  
 
-At each time step of the simulation, the virtual robot will receive 3 numerical inputs approximating range sensors. The inputs indicate the distance to the nearest wall from the front, left and right sensors. To determine the correct inputs for each cell, encoded maze files will be used. The mazes are provided by Udacity and include 3 layouts, measuring 12, 14 and 16 cells respectively. These mazes are designed to challenge the pathfinding ability of the robot. 
-
-*possibly generate new mazes*
-
-The dataset for this simulation will be comma separated files, each containing an encoded maze. Udacity has provided 3 test mazes, measuring 12, 14 and 16 cells respectively.
-
-At each time step of the simulation, the virtual robot will receive 3 numerical inputs. The inputs indicate the distance to the nearest wall from the front, left and right sensors.
 
 ### Solution Statement
 _(approx. 1 paragraph)_
 
-In this section, clearly describe a solution to the problem. The solution should be applicable to the project domain and appropriate for the dataset(s) or input(s) given. Additionally, describe the solution thoroughly such that it is clear that the solution is quantifiable (the solution can be expressed in mathematical or logical terms) , measurable (the solution can be measured by some metric and clearly observed), and replicable (the solution can be reproduced and occurs more than once).
+The robot will use a waterfall algorithm. It will track its location and inputs at each point in the maze, preventing a stuck condition if the maze contains an open loop. Once the robot reaches the goal, it will conduct a turn left first, depth-first search for the starting cell. I believe that these two searches, in concert with loop tracking will allow the robot to find a suitable path in a reasonable timeframe.  
+
 
 ### Benchmark Model
 _(approximately 1-2 paragraphs)_
 
-In this section, provide the details for a benchmark model or result that relates to the domain, problem statement, and intended solution. Ideally, the benchmark model or result contextualizes existing methods or known information in the domain and problem given, which could then be objectively compared to the solution. Describe how the benchmark model or result is measurable (can be measured by some metric and clearly observed) with thorough detail.
+Dead reckoning with dead end learning will be used as the null hypothesis algorithm for this project. Dead reckoning models travel straight until reaching a fork or dead end, at which point the algorithm randomly selects an open path and continues. Dead end learning requires tracking every space in the maze and virtually closing off dead ends as they are discovered. The dead reckoning algorithm has minimal memory and processing requirements and will eventually reach the goal. With dead ends closed off as they are discovered, the speed run should be faster than the exploratory run. This algorithm will be simulated 100 times per maze to create a statistical benchmark.
 
-The benchmark for this simulation will be a depth first search for the exploratory round, with the successful route being used for the speed round. While this will not garuntee the fastest time, it should be substantially faster than a breadth first search. This algorithm will be run 3 times per maze with the fastest time on each taken as the benchmark.
 
 ### Evaluation Metrics
 _(approx. 1-2 paragraphs)_
 
-In this section, propose at least one evaluation metric that can be used to quantify the performance of both the benchmark model and the solution model. The evaluation metric(s) you propose should be appropriate given the context of the data, the problem statement, and the intended solution. Describe how the evaluation metric(s) are derived and provide an example of their mathematical representations (if applicable). Complex evaluation metrics should be clearly defined and quantifiable (can be expressed in mathematical or logical terms).
+Each model will be simulated 100 times, for up to 1000 time steps per phase, on each available maze. The simulations will be scored by adding 1/30th of the time steps required for the first phase to the total time steps required for the second phase. First phase, second phase and final score statistics will be evaluated for statistical significance. This scoring system favors reliable and efficient algorithms over exhaustive and random algorithms.  
+
+By tracking and reporting on the first phase, evaluation will be possible on exploration efficiency. Finding the center quickly will contribute significantly to the final result. The same statistics will report on exploration efficacy. Mapping the best route to the center will also contribute significantly to the final result, but may not be decisive if the exploration phase is inefficient. Finally, the scoring data combines these metrics to an overall algorithmic effectiveness metric. With all three metrics, lower values are preferred.  
 
 ### Project Design
 _(approx. 1 page)_
 
 In this final section, summarize a theoretical workflow for approaching a solution given the problem. Provide thorough discussion for what strategies you may consider employing, what analysis of the data might be required before being used, or which algorithms will be considered for your implementation. The workflow and discussion that you provide should align with the qualities of the previous sections. Additionally, you are encouraged to include small visualizations, pseudocode, or diagrams to aid in describing the project design, but it is not required. The discussion should clearly outline your intended workflow of the capstone project.
+
+
+
 
 -----------
 

@@ -2,3 +2,4 @@
 002	http://robotics.usc.edu/~harsh/docs/micromouse.pdf
 003	http://timsengineeringblog.weebly.com/micromouse.html
 004	http://web.science.mq.edu.au/~len/preprint/gibb.acsc97.pdf
+005	http://web.cecs.pdx.edu/~edam/Reports/2001/DWillardson.pdf
