@@ -9,7 +9,7 @@ _(approx. 2-3 pages)_
 ### Domain Background
 _(approx. 1-2 paragraphs)_
 
-Micromouse competitions date back to the 1970s, requiring the robots to explore a novel maze and plot a best path through it. These competitions narrow this problem field down to allow competitive focus on application of autonomous action planning. The robot must be able to evaluate its surroundings and plan a course of action that meets the current situations framework of restrictions.
+Micromouse competitions date back to the 1972, requiring the robots to explore a novel maze and plot a best path through it. These competitions narrow this problem field down to allow competitive focus on application of autonomous action planning. The robot must be able to evaluate its surroundings and plan a course of action that meets the current situations framework of restrictions.
 
 These competitions encourage the development of methods for autonomous robots to handle novel situations encountered in the world. They also require the robot to compensate for flaws in hardware and the imperfect nature of real world applications. Solving these challenges allows robots to be deployed in a wider variety of situations, with less direct oversight. This has value in many aspects of society and industry.  
 
@@ -37,7 +37,6 @@ _(approximately 1-2 paragraphs)_
 
 Dead reckoning with dead end learning will be used as the null hypothesis algorithm for this project. Dead reckoning models travel straight until reaching a fork or dead end, at which point the algorithm randomly selects an open path and continues. Dead end learning requires tracking every space in the maze and virtually closing off dead ends as they are discovered. The dead reckoning algorithm has minimal memory and processing requirements and will eventually reach the goal. With dead ends closed off as they are discovered, the speed run should be faster than the exploratory run. This algorithm will be simulated 100 times per maze to create a statistical benchmark.
 
-
 ### Evaluation Metrics
 _(approx. 1-2 paragraphs)_
 
@@ -50,7 +49,7 @@ _(approx. 1 page)_
 
 In this final section, summarize a theoretical workflow for approaching a solution given the problem. Provide thorough discussion for what strategies you may consider employing, what analysis of the data might be required before being used, or which algorithms will be considered for your implementation. The workflow and discussion that you provide should align with the qualities of the previous sections. Additionally, you are encouraged to include small visualizations, pseudocode, or diagrams to aid in describing the project design, but it is not required. The discussion should clearly outline your intended workflow of the capstone project.
 
-
+This experiment will be conducted in # phases. First, I will 
 
 
 -----------
