@@ -12,6 +12,25 @@ class Robot(object):
         self.location = [0, 0]
         self.heading = 'up'
         self.maze_dim = maze_dim
+        self.blank_map(self.maze_dim) #Create internal map of the maze
+    
+    def blank_map(self, maze_dim):
+        maze = np.zeros((maze_dim,maze_dim,2), dtype=np.uint8)
+        maze[0, :, 0] += 1
+        maze[-1, :, 0] += 2
+        maze[:, 0, 0] += 4
+        maze[:, -1, 0] += 8
+
+        maze[:,:,1] = 255
+        
+        center = maze_dim // 2
+        maze[center, center, 1] = 0
+        if maze_dim % 2 == 0:
+            maze[center-1, center-1, 1] = 0
+            maze[center, center-1, 1] = 0
+            maze[center-1, center, 1] = 0
+
+        self.maze = maze
 
     def next_move(self, sensors):
         '''
@@ -35,7 +54,31 @@ class Robot(object):
         the tester to end the run and return the robot to the start.
         '''
 
-        rotation = 0
-        movement = 0
+        print self.maze[:,:,0]
+        print self.maze[:,:,1]
+        
+        if sensors[1] == 0:
+            if sensors[0] > 0:
+                rotation = -90
+                if sensors[0] > 2:
+                    movement = 3
+                else:
+                    movement = sensors[0]
 
+            else:
+                rotation = 90
+                if sensors[2] > 2:
+                    movement = 3
+                else:
+                    movement = sensors[2]
+
+        else:
+            rotation = 0
+            if sensors[1] > 2:
+                movement = 3
+            else:
+                movement = sensors[1]
+
+        
+        
         return rotation, movement
