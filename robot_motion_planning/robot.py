@@ -10,28 +10,51 @@ class Robot(object):
         '''
 
         self.location = [0, 0]
-        self.heading = 'up'
+        self.directions = ['up', 'east', 'down', 'west']
+        self.heading = 0
         self.maze_dim = maze_dim
-        self.blank_map(self.maze_dim) #Create internal map of the maze
+        self.maze = self.blank_map(self.maze_dim) #Create internal map of the maze
     
     def blank_map(self, maze_dim):
+        
+        # Define map dimensions: maze wall layer = 0, waterfall calculation layer = 1
         maze = np.zeros((maze_dim,maze_dim,2), dtype=np.uint8)
-        maze[0, :, 0] += 1
-        maze[-1, :, 0] += 2
-        maze[:, 0, 0] += 4
-        maze[:, -1, 0] += 8
 
-        maze[:,:,1] = 255
+        # Define exterior walls on map
+        maze[0, :, 0] += 1  # North
+        maze[-1, :, 0] += 2 # South
+        maze[:, 0, 0] += 4 # West
+        maze[:, -1, 0] += 8 # East
+
+        maze[:,:,1] = 200 # Assume all spaces are 200 from goal until otherwise defined
+        maze[-1,0,0] = 14 # Mark standard starting walls for standard starting cell
+        maze[0,0,1] = 255 # Mark starting square as worst possible location
         
         center = maze_dim // 2
-        maze[center, center, 1] = 0
-        if maze_dim % 2 == 0:
+        
+        
+        maze[center, center, 1] = 0 # Mark center cell with distance = 0
+        if maze_dim % 2 == 0: # If maze has even dimensions, set all 4 center cells with distance = 0
             maze[center-1, center-1, 1] = 0
             maze[center, center-1, 1] = 0
             maze[center-1, center, 1] = 0
 
-        self.maze = maze
-
+        return maze
+    
+    def update_maze(self, sensors):
+        pass
+    
+    def update_location(self, movement):
+        if self.heading == 0:
+            self.location = (self.location[0], self.location[1]+movement)
+        if self.heading == 1:
+            self.location = (self.location[0]+movement, self.location[1])
+        if self.heading == 2:
+            self.location = (self.location[0], self.location[1]-movement)
+        if self.heading == 3:
+            self.location = (self.location[0]-movement, self.location[1])
+        
+        
     def next_move(self, sensors):
         '''
         Use this function to determine the next move the robot should make,
@@ -56,22 +79,23 @@ class Robot(object):
 
         print self.maze[:,:,0]
         print self.maze[:,:,1]
+        print self.location
         
         if sensors[1] == 0:
             if sensors[0] > 0:
                 rotation = -90
+                self.heading = (self.heading - 1) % 4
                 if sensors[0] > 2:
                     movement = 3
                 else:
                     movement = sensors[0]
-
             else:
                 rotation = 90
+                self.heading = (self.heading + 1) % 4
                 if sensors[2] > 2:
                     movement = 3
                 else:
                     movement = sensors[2]
-
         else:
             rotation = 0
             if sensors[1] > 2:
@@ -79,6 +103,8 @@ class Robot(object):
             else:
                 movement = sensors[1]
 
+        if self.heading < 0:
+            self.heading += 4
         
-        
+        self.update_location(movement)
         return rotation, movement
