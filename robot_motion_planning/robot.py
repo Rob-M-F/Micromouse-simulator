@@ -9,8 +9,9 @@ class Robot(object):
         the robot is placed in.
         '''
 
-        self.location = [0, 0]
-        self.directions = ['up', 'east', 'down', 'west']
+        self.exploring = 1
+        self.location = [0, -1]
+        self.directions = ['North', 'East', 'South', 'West']
         self.heading = 0
         self.maze_dim = maze_dim
         self.maze = self.blank_map(self.maze_dim) #Create internal map of the maze
@@ -22,9 +23,9 @@ class Robot(object):
 
         # Define exterior walls on map
         maze[0, :, 0] += 1  # North
+        maze[:, -1, 0] += 8 # East
         maze[-1, :, 0] += 2 # South
         maze[:, 0, 0] += 4 # West
-        maze[:, -1, 0] += 8 # East
 
         maze[:,:,1] = 200 # Assume all spaces are 200 from goal until otherwise defined
         maze[-1,0,0] = 14 # Mark standard starting walls for standard starting cell
@@ -43,6 +44,14 @@ class Robot(object):
     
     def update_maze(self, sensors):
         pass
+    
+    def update_heading(self, rotation):
+        if rotation < 0:
+            self.heading = (self.heading - 1) % 4
+        elif rotation > 0:
+            self.heading = (self.heading + 1) % 4
+        if self.heading < 0:
+            self.heading += 4
     
     def update_location(self, movement):
         if self.heading == 0:
@@ -76,15 +85,19 @@ class Robot(object):
         the maze) then returing the tuple ('Reset', 'Reset') will indicate to
         the tester to end the run and return the robot to the start.
         '''
-
+        if self.maze[self.location[0], self.location[1], 1] == 0:
+            return 'Reset', 'Reset'
+        
         print self.maze[:,:,0]
-        print self.maze[:,:,1]
-        print self.location
+#        print self.maze[:,:,1]
+        
+        this_maze = self.maze[:,:,0]
+        this_maze[self.location[0], self.location[1]] = 100
+        print this_maze
         
         if sensors[1] == 0:
             if sensors[0] > 0:
                 rotation = -90
-                self.heading = (self.heading - 1) % 4
                 if sensors[0] > 2:
                     movement = 3
                 else:
@@ -103,8 +116,9 @@ class Robot(object):
             else:
                 movement = sensors[1]
 
-        if self.heading < 0:
-            self.heading += 4
-        
+        self.update_heading(rotation)
         self.update_location(movement)
+        
+        print self.location, self.directions[self.heading], movement
+        
         return rotation, movement
