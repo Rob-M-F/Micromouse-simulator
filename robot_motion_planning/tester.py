@@ -1,4 +1,5 @@
 from maze import Maze
+from showmaze import display_maze, display_robot
 from robot import Robot
 import sys
 
@@ -23,10 +24,10 @@ if __name__ == '__main__':
     '''
 
     # Create a maze based on input argument on command line.
-    testmaze = Maze( str(sys.argv[1]) )
-
+    testmaze = Maze( str(sys.argv[1]), draw=True, cell_size=40)
+    
     # Intitialize a robot; robot receives info about maze dimensions.
-    testrobot = Robot(testmaze.dim)
+    testrobot = Robot(testmaze, draw=True)
 
     # Record robot performance over two runs.
     runtimes = []
