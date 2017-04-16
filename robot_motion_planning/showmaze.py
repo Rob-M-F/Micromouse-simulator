@@ -85,19 +85,40 @@ class display_robot(object):
         self.pen.showturtle()
         self.stamp = self.pen.stamp()
 
-    def move_bot(self, new_loc = None, new_head = None):
-        # Check for missing values, replace with current values as needed
-        if new_loc == None:
-            new_loc = self.pen.pos()
-
-        if new_head == None:
-            new_head = self.pen.heading()
+    def move_bot(self, location, heading=0):
+        # Find the start and end positions and orientations for the stamp
+        x_start = self.pen.pos()[0]
+        y_start = self.pen.pos()[1]
+        h_start = int(self.pen.heading())
+        print x_start, y_start, h_start, '\t\t',
         
-        # Remove previous stamp then position and rotate the pen before applying the new stamp
-        self.pen.clearstamp(self.stamp)
-        self.pen.goto(self.origin + (self.cell_size * new_loc[0]), self.origin + (self.cell_size * new_loc[1]))
-        self.pen.setheading(new_head)
-        self.stamp = self.pen.stamp()
+        x_range = ((location[0] * self.cell_size) + self.origin) - x_start
+        y_range = ((location[1] * self.cell_size) + self.origin) - y_start
+        print x_range, y_range, heading
+
+        if heading >= 0: mod = 1
+        else: mod = -1
+
+        # Rotate the stamp 10 degrees at a time
+        if heading != 0:
+            for i in range(0, 91, 10):
+                self.pen.setheading(h_start - mod*i)
+    #            self.pen.goto(x_start, y_start)
+                self.pen.clearstamp(self.stamp)
+                self.stamp = self.pen.stamp()
+        
+        # Move the stamp one pixel at a time
+        if (x_range + y_range) >= 0: mod = 1
+        else: mod = -1
+        
+        for i in range(abs(x_range + y_range + mod)):
+            if abs(x_range) > abs(y_range):
+                self.pen.goto(x_start + mod*i, y_start)
+            else:
+                self.pen.goto(x_start, y_start + mod*i)
+            self.pen.clearstamp(self.stamp)                
+            self.stamp = self.pen.stamp()
+
         
 if __name__ == '__main__':
     testmaze = Maze( str(sys.argv[1]) )

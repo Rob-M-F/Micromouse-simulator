@@ -14,6 +14,7 @@ dir_reverse = {'u': 'd', 'r': 'l', 'd': 'u', 'l': 'r',
                'up': 'd', 'right': 'l', 'down': 'u', 'left': 'r'}
 
 # test and score parameters
+#max_time = 15
 max_time = 1000
 train_score_mult = 1/30.
 
@@ -22,12 +23,17 @@ if __name__ == '__main__':
     This script tests a robot based on the code in robot.py on a maze given
     as an argument when running the script.
     '''
-
+    draw = True
+    
     # Create a maze based on input argument on command line.
-    testmaze = Maze( str(sys.argv[1]), draw=True, cell_size=40)
+    testmaze = Maze( str(sys.argv[1]))
+    
+    if draw: draw_maze = display_maze(testmaze, 40)
     
     # Intitialize a robot; robot receives info about maze dimensions.
-    testrobot = Robot(testmaze, draw=True)
+    testrobot = Robot(testmaze.get_dim())
+    
+    if draw: draw_robot = display_robot(draw_maze)
 
     # Record robot performance over two runs.
     runtimes = []
@@ -71,8 +77,12 @@ if __name__ == '__main__':
             # perform rotation
             if rotation == -90:
                 robot_pos['heading'] = dir_sensors[robot_pos['heading']][0]
+                if draw: 
+                    draw_robot.move_bot(robot_pos['location'], rotation)
             elif rotation == 90:
                 robot_pos['heading'] = dir_sensors[robot_pos['heading']][2]
+                if draw: 
+                    draw_robot.move_bot(robot_pos['location'], rotation)
             elif rotation == 0:
                 pass
             else:
@@ -100,6 +110,8 @@ if __name__ == '__main__':
                     else:
                         print "Movement stopped by wall."
                         movement = 0
+                if draw: 
+                    draw_robot.move_bot(location=robot_pos['location'])
 
             # check for goal entered
             goal_bounds = [testmaze.dim/2 - 1, testmaze.dim/2]
@@ -113,3 +125,5 @@ if __name__ == '__main__':
     # Report score if robot is successful.
     if len(runtimes) == 2:
         print "Task complete! Score: {:4.3f}".format(runtimes[1] + train_score_mult*runtimes[0])
+        
+    draw_maze.get_window().exitonclick() # Draw maze then exit on click

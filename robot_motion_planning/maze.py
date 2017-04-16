@@ -2,7 +2,7 @@ import numpy as np
 import turtle
 
 class Maze(object):
-    def __init__(self, filename, draw=False, cell_size = 20):
+    def __init__(self, filename):
         '''
         Maze objects have two main attributes:
         - dim: mazes should be square, with sides of even length. (integer)
@@ -56,12 +56,6 @@ class Maze(object):
                     print 'Inconsistent horizontal wall betweeen {} and {}'.format(cell, cell2)
             raise Exception('Consistency errors found in wall specifications!')
 
-        self.window = turtle.Screen()
-        self.sq_size = cell_size
-        self.origin = self.dim * self.sq_size / -2
-        if draw:
-            self.draw_maze()
-
 
     def is_permissible(self, cell, direction):
         """
@@ -101,71 +95,12 @@ class Maze(object):
         return distance
     
     
-    def draw_maze(self):
-        """
-        Creates a TurtleScreen and draws out the maze.
-        """
-        # configure turtle for maze drawing
-        wally = turtle.RawPen(self.window)
-        wally.speed(0)
-        wally.hideturtle()
-        wally.penup()
-
-        # iterate through squares one by one to decide where to draw walls
-        for x in range(self.dim):
-            for y in range(self.dim):
-                if not self.is_permissible([x,y], 'up'):
-                    wally.goto(self.origin + self.sq_size * x, self.origin + self.sq_size * (y+1))
-                    wally.setheading(0)
-                    wally.pendown()
-                    wally.forward(self.sq_size)
-                    wally.penup()
-
-                if not self.is_permissible([x,y], 'right'):
-                    wally.goto(self.origin + self.sq_size * (x+1), self.origin + self.sq_size * y)
-                    wally.setheading(90)
-                    wally.pendown()
-                    wally.forward(self.sq_size)
-                    wally.penup()
-
-                # only check bottom wall if on lowest row
-                if y == 0 and not self.is_permissible([x,y], 'down'):
-                    wally.goto(self.origin + self.sq_size * x, self.origin)
-                    wally.setheading(0)
-                    wally.pendown()
-                    wally.forward(self.sq_size)
-                    wally.penup()
-
-                # only check left wall if on leftmost column
-                if x == 0 and not self.is_permissible([x,y], 'left'):
-                    wally.goto(self.origin, self.origin + self.sq_size * y)
-                    wally.setheading(90)
-                    wally.pendown()
-                    wally.forward(self.sq_size)
-                    wally.penup()
-
     def get_dim(self):
         return self.dim
 
-    def get_window(self):
-        return self.window
-
-    def get_origin(self):
-        return self.origin
-
-    def get_cell_size(self):
-        return self.sq_size
-
-    def close_display(self):
-        self.window.bye()
-
+def unit_tests():
+    pass
+    
 if __name__ == '__main__':
     import sys
-    testmaze = Maze( str(sys.argv[1]), draw=True, cell_size=40)
-#    bot = display_robot(maze_window)
-    """    import time
-    for i in range(5):
-        time.sleep(0.1)
-        bot.move_bot((0, i+1))"""
-    testmaze.get_window().exitonclick() # Draw maze then exit on click
-                        
+    testmaze = Maze( str(sys.argv[1]))                        
