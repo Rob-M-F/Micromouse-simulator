@@ -90,18 +90,16 @@ class display_robot(object):
         x_start = self.pen.pos()[0]
         y_start = self.pen.pos()[1]
         h_start = int(self.pen.heading())
-        print x_start, y_start, h_start, '\t\t',
         
         x_range = ((location[0] * self.cell_size) + self.origin) - x_start
         y_range = ((location[1] * self.cell_size) + self.origin) - y_start
-        print x_range, y_range, heading
 
         if heading >= 0: mod = 1
         else: mod = -1
 
         # Rotate the stamp 10 degrees at a time
         if heading != 0:
-            for i in range(0, 91, 10):
+            for i in range(0, 91, 30):
                 self.pen.setheading(h_start - mod*i)
     #            self.pen.goto(x_start, y_start)
                 self.pen.clearstamp(self.stamp)
@@ -111,7 +109,7 @@ class display_robot(object):
         if (x_range + y_range) >= 0: mod = 1
         else: mod = -1
         
-        for i in range(abs(x_range + y_range + mod)):
+        for i in range(0, abs(x_range + y_range + mod), 10):
             if abs(x_range) > abs(y_range):
                 self.pen.goto(x_start + mod*i, y_start)
             else:
