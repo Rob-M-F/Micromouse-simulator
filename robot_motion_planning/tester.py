@@ -65,6 +65,7 @@ if __name__ == '__main__':
                 if run == 0 and hit_goal:
                     run_active = False
                     runtimes.append(total_time)
+                    if draw: draw_robot = display_robot(draw_maze)
                     print "Ending first run. Starting next run."
                     break
                 elif run == 0 and not hit_goal:
