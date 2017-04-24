@@ -303,29 +303,41 @@ class Robot(object):
             walls = self.decode_cell(maze[loc[0], loc[1], 0])
             for i in range(4):
                 check_loc = self.decode_heading(i, loc)
-                if (max(check_loc) < maze_size) and (2*i not in walls):
+                if (max(check_loc) < maze_size) and (2**i not in walls):
                     if new_maze[check_loc[0], check_loc[1]] == 0:
                         stack.append(check_loc)
                         new_maze[check_loc[0], check_loc[1]] = new_maze[loc[0], loc[1]] + 1
-#       print new_maze
-        maze[:,:,0] = new_maze
+        print new_maze
+        maze[:,:,1] = new_maze - 1
         return maze
     
+    
     def waterfall_choice(self, maze, location, heading):
+        neighbors = self.waterfall_neighbors(maze, location)
+        min_value = min(neighbors)
+        if neighbors[heading] == min_value:
+            return heading
+        else:
+            return neighbors.index(min_value)
+
+        
+    def waterfall_neighbors(self, maze, location):
         maze_size = maze.shape[0]
-        best_head = heading
-        best_dist = 255
         walls = self.decode_cell(maze[location[0], location[1], 0])
-        print walls
+        neighbors = list()
         for i in range(4):
             check_loc = self.decode_heading(i, location)
-            if (max(check_loc) < maze_size) and (2*i not in walls):
+            if (max(check_loc) < maze_size) and (2**i not in walls):
                 dist = maze[check_loc[0], check_loc[1], 1]
-                if (dist < best_dist) or ((dist == best_dist) and (i == heading)):
-                    best_dist = dist
-                    best_head = i
-        return best_head
-
+                if self.exploring:
+                    visits = maze[check_loc[0], check_loc[1], 2]
+                else:
+                    visits = 0
+                neighbors.append(dist + visits)
+            else:
+                neighbors.append(255)
+        return neighbors
+        
     def waterfall(self, maze, location, heading):
         self.maze = self.waterfall_update(maze)
         new_head = self.waterfall_choice(maze, location, heading)
@@ -341,7 +353,7 @@ class Robot(object):
         
         movement = 1
         new_loc = location
-        while not self.exploring:
+        while self.exploring:
             new_loc = self.decode_heading(new_head, new_loc)
             new_heading = self.waterfall_choice(maze, new_loc, new_head)
             if (new_heading != new_head) or movement > 2:
