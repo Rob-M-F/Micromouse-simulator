@@ -3,7 +3,7 @@ import turtle
 from maze import Maze
 
 class Robot(object):
-    def __init__(self, maze_dim, algorithm="wall_follower"):
+    def __init__(self, maze_dim, algorithm="waterfall"):
         '''
         Initializes Robot objects.
         
@@ -14,7 +14,7 @@ class Robot(object):
                 Defaults to "wall_follower"
         '''
         # Set chosen algorithm, if it is not on the algorithms list below, assume the passed value is a function name
-        algorithms = {"wall_follower":self.wall_follower, "dead_recon":self.dead_reckoning, "Waterfall":self.waterfall}
+        algorithms = {"wall_follower":self.wall_follower, "dead_recon":self.dead_reckoning, "waterfall":self.waterfall}
 
         if algorithm in algorithms.keys(): 
             self.algorithm = algorithms[algorithm]
@@ -287,9 +287,68 @@ class Robot(object):
     def dead_reckoning(self, maze, location, heading):
         return 0, 0
 
+    def waterfall_update(self, maze):
+        maze_size = maze.shape[0]
+        center = maze_size // 2
+        new_maze = np.zeros((maze_size, maze_size), dtype=np.uint8)
+        stack = list()
+        if (maze_size % 2) == 0:
+            stack.extend([(center, center), (center-1, center), (center, center-1), (center-1, center-1)])
+            new_maze[center-1:center+1, center-1:center+1] = 1
+        else:
+            stack.append((center, center))
+            new_maze[center, center] = 1
+        while len(stack) > 0:
+            loc = stack.pop(0)
+            walls = self.decode_cell(maze[loc[0], loc[1], 0])
+            for i in range(4):
+                check_loc = self.decode_heading(i, loc)
+                if (max(check_loc) < maze_size) and (2*i not in walls):
+                    if new_maze[check_loc[0], check_loc[1]] == 0:
+                        stack.append(check_loc)
+                        new_maze[check_loc[0], check_loc[1]] = new_maze[loc[0], loc[1]] + 1
+#       print new_maze
+        maze[:,:,0] = new_maze
+        return maze
+    
+    def waterfall_choice(self, maze, location, heading):
+        maze_size = maze.shape[0]
+        best_head = heading
+        best_dist = 255
+        walls = self.decode_cell(maze[location[0], location[1], 0])
+        print walls
+        for i in range(4):
+            check_loc = self.decode_heading(i, location)
+            if (max(check_loc) < maze_size) and (2*i not in walls):
+                dist = maze[check_loc[0], check_loc[1], 1]
+                if (dist < best_dist) or ((dist == best_dist) and (i == heading)):
+                    best_dist = dist
+                    best_head = i
+        return best_head
 
     def waterfall(self, maze, location, heading):
-        return 0, 0
+        self.maze = self.waterfall_update(maze)
+        new_head = self.waterfall_choice(maze, location, heading)
+        head_turn_left = {0:3, 1:0, 2:1, 3:2}
+        if new_head == heading:
+            rotation = 0
+        elif new_head == head_turn_left[heading]:
+            rotation = -1
+        elif heading == head_turn_left[new_head]:
+            rotation = 1
+        else:
+            return 1, 0
+        
+        movement = 1
+        new_loc = location
+        while not self.exploring:
+            new_loc = self.decode_heading(new_head, new_loc)
+            new_heading = self.waterfall_choice(maze, new_loc, new_head)
+            if (new_heading != new_head) or movement > 2:
+                return rotation, movement
+            else:
+                movement += 1
+        return rotation, movement
             
       
 def unit_tests():
@@ -301,6 +360,8 @@ def unit_tests():
     assert bot.decode_cell(6) == [2, 4]
     assert bot.decode_cell(11) == [1, 2, 8]
     assert bot.decode_cell(15) == [1, 2, 4, 8]
+    
+    maze = bot.waterfall_update(bot.maze)
     
     print "All tests passed."
 
