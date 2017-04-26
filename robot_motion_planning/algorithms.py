@@ -1,128 +1,167 @@
 import numpy as np
 
-algorithms = {
-    "Dead_reckoning":Naive_dead_reckoning,
-    "Tracking_dead_reckoning":Naive_dead_reckoning,
-    "Wall_follower":Naive_dead_reckoning,
-    "Waterfall":Basic_waterfall
-             }
-
 class Algorithm(object):
-    def __init__(maze_dim):
+    """
+    Behavior model for simulated micro mouse.
+    
+    Attributes:
+        maze_dim:    known number of cells in width in the maze.
+        goal:        array of locations considered to be success conditions
+        start:       robot starting location, defaults to (0,0)
+        exploring:   track current simulation phase: exploration / speed
+        map_layers:  number of layers being used to track cell specific information
+        maze:         uint8 numpy array representing all data known by the algorithm about the maze
+        valid_walls: array listing bit values for walls, North, East, South, West respectively
+        cell_walls:  array of values taken from valid_walls representing present walls 
+        cell:        integer sum of cell_walls for a given cell in the map
+        heading:     direction of current facing of micro mouse. 0 - 3 inclusive. 2**heading = bit value of wall at that heading.
+        location:    integer x, y pair indicating the current cell location of the micro mouse
+        rotation:    one of [-90, 0, 90] indicating turn or straight.
+        movement:    integer from 0 - 3 inclusive, indicating the number of cells to move in the new direction.
+        transform:   integer tuple that can be added to a location to move it one cell in the direction of heading
+    
+    """
+    
+    
+    def __init__(self, maze_dim, goal, start=(0,0), map_layers=1):
         self.maze_dim = maze_dim
+        self.goal = goal
+        self.start = start
+        self.exploring = True
+        self.maze = self.blank_maze(maze_dim, map_layers, goal)
+        self.valid_walls = [1, 2, 4, 8]
+    
+    def blank_maze(self, maze_dim, map_layers, goal):
+        """ Create a blank map of the maze. Fill in outer walls. """
+        maze = np.zeros((maze_dim, maze_dim, map_layers), dtype=np.uint8)
+
+        # Fill in outer walls
+        maze[:, -1, 0] += 1 # North
+        maze[:, 0, 0] += 4 # South
+        maze[-1, :, 0] += 2 # East
+        maze[0, :, 0] += 8  # West
+        
+        return maze
+    
+    
+    def update_maze(self, maze, walls, location):
+        """ Update maze representation to reflect current sensor data. """
+        for w, wall in enumerate(walls):
+            if wall == 0: # If this heading is not a blind spot
+                x = location[0]
+                y = location[1]
+                maze[x, y, 0] = self.mark_wall(maze[x, y, 0], w) # Mark visible wall
+
+                transform = self.decode_heading(w)                
+                x += transform[0]
+                y += transform[1]
+                if (x < maze.shape[0]) and (x >= 0) and (y < maze.shape[1]) and (y >= 0):
+                    maze[x, y, 0] = self.mark_wall(maze[x, y, 0], (w+2)%4) # Mark other side of visible wall
+        return maze
 
     
-    def next_move(walls = list(), location = (0, 0), heading=0):
-        '''
-        Accept sensor data and return planned rotation and movement for the current timestep. Uses the algorithm defined for this robot to 
-        determine planned steps.
-        
-        Args:
-            walls: list of adjacent walls from [1, 2, 4, 8] representing North, East, South, West respectively. The value is present if the current cell has a wall on that side.
-            
-        Returns:
-            rotation: direction the robot should turn, in 90 degree increments, from -90 to +90. 'Reset' at the end of exploration phase.
-            movement: number of cells the robot should move, after rotation, from 0 to 3 cells. 'Reset' at the end of exploration phase.
-        '''
-        return 0, 0
-    
-    
-    def check_movement(self, heading, cell):
-        '''
-        Check if a given movement is valid.
-        Args:
-            heading: current heading 0 - 3 for North, East, South, West respectively
-            walls: list of integers representing wall presence, [1, 2, 4, 8]
-            
-        Returns:
-            checked: bool indicating whether the proposed movement is valid
-        '''
-        if 2**heading in self.decode_cell(cell):
-            return False
-        else:
-            return True
-        
-        
-    def get_visits(self, maze, location):
-        '''
-        '''
-        cell_walls = self.decode_cell(maze[location[0], location[1], 0])
-        visits = [255,255,255,255]
-        for w, wall in enumerate(self.walls):
-            if wall not in cell_walls:
-                loc = self.decode_heading(w, location)
-                visits[w] = maze[loc[0], loc[1], 2]
-        return visits
-
     def decode_cell(self, cell):
-        '''
-        Decode cell wall value and add flag value if not already present.
-        Args:
-            cell: integer from 0 to 15 inclusive.
-            
-        Returns:
-            walls: list of integers representing walls, [1 (North, 2(East), 4(South), 8(West)]
-        '''
-        wall_values = list(self.walls)
-        wall_values.reverse()
-        
-        walls = []
-        for heading in wall_values:
+        """ Decode cell wall value and add flag value if not already present. """
+        reversed_walls = list(self.valid_walls)
+        reversed_walls.reverse()
+        print reversed_walls
+        cell_walls = list()
+        for heading in reversed_walls:
             if cell >= heading:
                 cell -= heading
-                walls.append(heading)
-        walls.reverse()
-        return walls
+                cell_walls.append(heading)
+        cell_walls.reverse()
+        return cell_walls
 
+    
+    def mark_wall(self, cell, heading):
+        """ Determine if a wall is already mapped at a given heading, if not, add it. """
 
-# ********************************************************************************************************    
+        assert 2**heading in self.valid_walls  # Throw error on invalid heading values
+        cell_walls = self.decode_cell(cell)
+        if 2**heading not in cell_walls:
+            cell_walls.append(2**heading)
+        return sum(cell_walls)
+
     
-class Dead_reckoning(Algorithm):
-    def __init__(maze_dim, seed=0):
-        np.random.seed(seed)
+    def decode_heading(self, heading):
+        """ Convert directional heading into coordinate transformation. Addition with a location 
+            transforms that location by 1 cell in the direction of the given heading. """
+        
+        if heading == 0:
+            return (0, 1)
+        if heading == 1:
+            return (1, 0)
+        if heading == 2:
+            return (0, -1)
+        if heading == 3:
+            return (-1, 0)
     
-    
-    def next_move(walls = list(), location = (0, 0), heading=0):
-        '''
-        '''
-        rotation = 0
-        if 2**heading in walls:
-            rotation = np.random.choice([-90, 90])
-        return rotation
-    
+
+    def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
+        """ Determine the next action to take in searching for the goal. """        
+        return 'Reset', 'Reset'
+
 
 # ********************************************************************************************************
-   
-class Naive_wall_follower(Algorithm):
-    def __init__(self):
-        pass
+
+
+class Wall_follower(Algorithm):
+    """
+    Follows the left wall unless there is a less frequently visited alternative.
+    """
+
+    def __init__(self, maze_dim, goal, start=(0,0), map_layers=2):
+        self.maze_dim = maze_dim
+        self.goal = goal
+        self.start = start
+        self.exploring = True
+        self.maze = self.blank_maze(maze_dim, map_layers, goal)
+        self.valid_walls = [1, 2, 4, 8]
+        self.dead_ends = [7, 11, 13, 14]
     
-    def wall_follower(self, maze, location, heading, exploring=True):
-        '''
-        Follow left hand wall when possible.
-        '''
-        if exploring:
-            visits = self.get_visits(maze, location)
+    def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
+        """ Determine the next action to take in searching for the goal. """
+        
+        self.maze = self.update_maze(self.maze, walls, location)
+        
+        if location in self.goal:
+            return 'Reset', 'Reset'
+        
+        self.maze[location[0], location[1], 1] += 1 # Update visits to the current cell
+        
+        
+        visits = self.get_visits(self.maze, location)
         if visits[(heading + 3) % 4] == min(visits): # If turning left is an option, and best or tied for best, turn left.
-            rotation = -1
-        elif visits[heading] == min(visits): # If turning left isn't an option, check straight for the same qualities.
-            rotation = 0
-        else: # If straight also isn't an option, turn right.
-            rotation = 1
+            return -90, 1
+        
+        if visits[heading] == min(visits): # If turning left isn't an option, check straight for the same qualities.
+            return 0, 1
+        
+        if visits[(heading + 1) % 4] == min(visits): # If turning straight also isn't an option, check right.
+            return 90, 1
+        
+        return 90, 0 # If all else fails, turn right but don't move.
 
-        walls = self.decode_cell(maze[location[0], location[1], 0])
-        new_heading = self.update_heading(rotation, heading)
-
-        if self.walls[new_heading] in walls:
-            movement = 0
-        else:
-            movement = 1
-
-        return rotation, movement
+    
+    def get_visits(self, maze, location):
+        """ Return the number of visits to each adjoining cell, organized by heading. """
+        cell_walls = self.decode_cell(maze[location[0], location[1], 0])
+        visits = [255,255,255,255]
+        for w, wall in enumerate(self.valid_walls):
+            if wall not in cell_walls:
+                transform = self.decode_heading(w)
+                x = location[0] + transform[0]
+                y = location[1] + transform[1]
+                if maze[x,y,0] in self.dead_ends:
+                    maze[x,y,1] = 250
+                visits[w] = maze[x, y, 1]
+        return visits
 
 
 # ********************************************************************************************************
-    
+
+
 class Basic_waterfall(Algorithm):
     def __init__(self):
         # Set state (Exploration / Speed)
@@ -132,58 +171,6 @@ class Basic_waterfall(Algorithm):
         self.walls = [1, 2, 4, 8]
 
         pass
-
-    
-    def decode_heading(self, heading, location):
-        '''
-        
-        '''
-        if heading == 0:
-            return location[0], location[1]+1
-        if heading == 1:
-            return location[0]+1, location[1]
-        if heading == 2:
-            return location[0], location[1]-1
-        if heading == 3:
-            return location[0]-1, location[1]
-    
-    
-    def blank_map(self, maze_dim):
-        '''
-        Generate internal representation of maze environment.
-        
-        Args:
-            maze_dim: Integer length of one side of the square maze, in cells.
-        
-        Returns:
-            maze: Unsigned integer numpy array of shape (maze_dim, maze_dim, 3).
-                Layers of the array represent 0: Discovered cell configurations
-                                              1: Algorithm's score for the cell
-                                              2: Number of times cell was visited
-        '''
-        maze = np.zeros((maze_dim,maze_dim,3), dtype=np.uint8)
-        center = maze_dim // 2
-
-        # Prepare wall layer
-        maze[:, -1, 0] += 1 # North
-        maze[:, 0, 0] += 4 # South
-        maze[-1, :, 0] += 2 # East
-        maze[0, :, 0] += 8  # West
-
-        # Prepare distance to goal layer
-        maze[:,:,1] = 250 # Assume all spaces are 250 from goal until otherwise defined
-        maze[0,0,1] = 255 # Mark starting square as worst possible location
-        maze[center, center, 1] = 0 # Mark center cell with distance = 0
-        if maze_dim % 2 == 0: # If maze has even dimensions, set all 4 center cells with distance = 0
-            maze[center-1, center-1, 1] = 0
-            maze[center, center-1, 1] = 0
-            maze[center-1, center, 1] = 0
-        
-        # Prepare visit count layer
-        maze[:,:,2] = 0 # Mark all cells as having received 0 visits
-        maze[0,0,2] = 1 # Mark started cell as having been visited
-
-        return maze
 
     
     def waterfall_update(self, maze):
@@ -239,6 +226,7 @@ class Basic_waterfall(Algorithm):
                 neighbors.append(255)
         return neighbors
 
+    
     def waterfall(self, maze, location, heading):
         if (self.maze[self.location[0], self.location[1], 1] == 0):
             self.exporing = False
@@ -280,18 +268,24 @@ class Basic_waterfall(Algorithm):
                 movement += 1
         return rotation, movement
 
-def update_maze(self, maze, heading, location, sensors):
-        '''
-        Update maze representation to reflect current sensor data.
+    
+# ********************************************************************************************************
+
+
+    def placeholder(self):
+        # Prepare distance to goal layer
+        maze[:,:,1] = 250 # Assume all spaces are 250 from goal until otherwise defined
+        maze[0,0,1] = 255 # Mark starting square as worst possible location
+        maze[center, center, 1] = 0 # Mark center cell with distance = 0
+        if maze_dim % 2 == 0: # If maze has even dimensions, set all 4 center cells with distance = 0
+            maze[center-1, center-1, 1] = 0
+            maze[center, center-1, 1] = 0
+            maze[center-1, center, 1] = 0
         
-        Args:
-            maze: uint8 representation of the wall layout of the maze
-            walls: list of 4 integers indicating the distance to the nearest visible wall, -1 represents a blind spot
-            location: tuple of integers indication current position in the maze
-        
-        Returns:
-            maze: uint8 representation of the wall layout of the maze, updated to reflect new data
-        '''
+        # Prepare visit count layer
+        maze[:,:,2] = 0 # Mark all cells as having received 0 visits
+        maze[0,0,2] = 1 # Mark started cell as having been visited
+
         dead_ends = [7, 11, 13, 14]
         max_dim = maze.shape[0] - 1
         walls = self.decode_sensors(heading, sensors)
@@ -315,25 +309,6 @@ def update_maze(self, maze, heading, location, sensors):
         except IndexError:
             pass
         return maze
-
-    
-    def mark_wall(self, cell, flag):
-        '''
-        Decode cell wall value and add flag value if not already present.
-        Args:
-            cell: list of integers representing walls [1, 2, 4, 8]
-            flag: integer in [1, 2, 4, 8] representing which wall to add.
-            
-        Returns:
-            cell: integer from 0 to 15 inclusive representing walls present
-                    1: North, 2: East, 4: South, 8: West
-        '''
-        assert flag in self.walls # Throw error on invalid flag values
-        walls = self.decode_cell(cell)
-        
-        if flag not in walls:
-            walls.append(flag)
-        return sum(walls)
 
 
 # ********************************************************************************************************

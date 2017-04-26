@@ -19,10 +19,9 @@ max_time = 1000
 train_score_mult = 1/30.
 
 if __name__ == '__main__':
-    '''
-    This script tests a robot based on the code in robot.py on a maze given
-    as an argument when running the script.
-    '''
+    """ This script tests a robot based on the code in robot.py on a maze given
+    as an argument when running the script. """
+
     draw = True
     
     # Create a maze based on input argument on command line.
@@ -31,7 +30,7 @@ if __name__ == '__main__':
     if draw: draw_maze = display_maze(testmaze, 40)
     
     # Intitialize a robot; robot receives info about maze dimensions.
-    testrobot = Robot(testmaze.get_dim())
+    testrobot = Robot(testmaze.get_dim(), "Wall_follower")
     
     if draw: draw_robot = display_robot(draw_maze)
 
