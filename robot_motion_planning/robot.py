@@ -28,7 +28,7 @@ class Robot(object):
             self.goal = [goal]
 
         # self.algorithm = self
-        self.algorithm = Wall_follower(maze_dim, self.goal)
+        self.algorithm = Basic_waterfall(maze_dim, self.goal)
             
         self.location = (0, 0)
         self.heading = 0

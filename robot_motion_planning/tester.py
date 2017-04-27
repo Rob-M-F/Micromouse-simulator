@@ -30,7 +30,7 @@ if __name__ == '__main__':
     if draw: draw_maze = display_maze(testmaze, 40)
     
     # Intitialize a robot; robot receives info about maze dimensions.
-    testrobot = Robot(testmaze.get_dim(), "Wall_follower")
+    testrobot = Robot(testmaze.get_dim())
     
     if draw: draw_robot = display_robot(draw_maze)
 

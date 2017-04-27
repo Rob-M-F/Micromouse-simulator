@@ -23,29 +23,37 @@ class Algorithm(object):
     """
     
     
-    def __init__(self, maze_dim, goal, start=(0,0), map_layers=1):
+    def __init__(self, maze_dim, goal):
         self.maze_dim = maze_dim
         self.goal = goal
         self.start = start
         self.exploring = True
-        self.maze = self.blank_maze(maze_dim, map_layers, goal)
+        self.maze = self.blank_maze(maze_dim, map_layers=2, goal=self.goal)
         self.valid_walls = [1, 2, 4, 8]
+        self.dead_ends = [7, 11, 13, 14]
+        
+        
+    def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
+        """ Determine the next action to take in searching for the goal. """   
+        
+        return 'Reset', 'Reset'
+
     
     def blank_maze(self, maze_dim, map_layers, goal):
         """ Create a blank map of the maze. Fill in outer walls. """
+        
         maze = np.zeros((maze_dim, maze_dim, map_layers), dtype=np.uint8)
-
         # Fill in outer walls
         maze[:, -1, 0] += 1 # North
         maze[:, 0, 0] += 4 # South
         maze[-1, :, 0] += 2 # East
         maze[0, :, 0] += 8  # West
-        
         return maze
     
     
     def update_maze(self, maze, walls, location):
         """ Update maze representation to reflect current sensor data. """
+        
         for w, wall in enumerate(walls):
             if wall == 0: # If this heading is not a blind spot
                 x = location[0]
@@ -62,9 +70,9 @@ class Algorithm(object):
     
     def decode_cell(self, cell):
         """ Decode cell wall value and add flag value if not already present. """
+        
         reversed_walls = list(self.valid_walls)
         reversed_walls.reverse()
-        print reversed_walls
         cell_walls = list()
         for heading in reversed_walls:
             if cell >= heading:
@@ -97,10 +105,21 @@ class Algorithm(object):
         if heading == 3:
             return (-1, 0)
     
-
-    def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
-        """ Determine the next action to take in searching for the goal. """        
-        return 'Reset', 'Reset'
+    
+    def get_visits(self, maze, location):
+        """ Return the number of visits to each adjoining cell, organized by heading. """
+        
+        cell_walls = self.decode_cell(maze[location[0], location[1], 0])
+        visits = [255,255,255,255]
+        for w, wall in enumerate(self.valid_walls):
+            if wall not in cell_walls:
+                transform = self.decode_heading(w)
+                x = location[0] + transform[0]
+                y = location[1] + transform[1]
+                if maze[x,y,0] in self.dead_ends:
+                    maze[x,y,1] = 250
+                visits[w] = maze[x, y, 1]
+        return visits
 
 
 # ********************************************************************************************************
@@ -111,12 +130,10 @@ class Wall_follower(Algorithm):
     Follows the left wall unless there is a less frequently visited alternative.
     """
 
-    def __init__(self, maze_dim, goal, start=(0,0), map_layers=2):
+    def __init__(self, maze_dim, goal):
         self.maze_dim = maze_dim
         self.goal = goal
-        self.start = start
-        self.exploring = True
-        self.maze = self.blank_maze(maze_dim, map_layers, goal)
+        self.maze = self.blank_maze(maze_dim, map_layers=2, goal=self.goal)
         self.valid_walls = [1, 2, 4, 8]
         self.dead_ends = [7, 11, 13, 14]
     
@@ -143,130 +160,113 @@ class Wall_follower(Algorithm):
         
         return 90, 0 # If all else fails, turn right but don't move.
 
-    
-    def get_visits(self, maze, location):
-        """ Return the number of visits to each adjoining cell, organized by heading. """
-        cell_walls = self.decode_cell(maze[location[0], location[1], 0])
-        visits = [255,255,255,255]
-        for w, wall in enumerate(self.valid_walls):
-            if wall not in cell_walls:
-                transform = self.decode_heading(w)
-                x = location[0] + transform[0]
-                y = location[1] + transform[1]
-                if maze[x,y,0] in self.dead_ends:
-                    maze[x,y,1] = 250
-                visits[w] = maze[x, y, 1]
-        return visits
-
 
 # ********************************************************************************************************
 
 
 class Basic_waterfall(Algorithm):
-    def __init__(self):
+    def __init__(self, maze_dim, goal, start = (0, 0)):
         # Set state (Exploration / Speed)
         self.exploring = True
+        self.outbound = True
+        self.maze_dim = maze_dim
+        self.goal = goal
+        self.start = [start]
+        self.maze = self.blank_maze(maze_dim, map_layers=3, goal=self.goal)
+        self.valid_walls = [1, 2, 4, 8] # Set maze wall values [North, East, South, West]
+        self.dead_ends = [7, 11, 13, 14]
         
-        # Set maze wall values [North, East, South, West]
-        self.walls = [1, 2, 4, 8]
+    
+    def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
+        """ Determine the next action to take in searching for the goal. """
 
-        pass
+        self.maze = self.update_maze(self.maze, walls, location)
+        self.maze[location[0], location[1], 1] += 1 # Update visits to the current cell
+        self.maze = self.waterfall_update(self.maze)
+        visits = self.get_visits(self.maze, location)
 
+        if (location in self.goal) and self.outbound: # If goal is reached, return to start
+            self.outbound = False
+
+        if (location in self.start) and not self.outbound: # If goal has been reached and back at start, end run.
+            self.outbound = True
+            self.exploring = False
+            return 'Reset', 'Reset'
+
+        return self.waterfall_choice(self.maze, heading, location)
+        
     
     def waterfall_update(self, maze):
         maze_size = maze.shape[0]
         center = maze_size // 2
         new_maze = np.zeros((maze_size, maze_size), dtype=np.uint8)
-        stack = list()
-        if (maze_size % 2) == 0:
-            stack.extend([(center, center), (center-1, center), (center, center-1), (center-1, center-1)])
-            new_maze[center-1:center+1, center-1:center+1] = 1
+        if self.outbound:
+            stack = list(self.goal)
         else:
-            stack.append((center, center))
-            new_maze[center, center] = 1
+            stack = list(self.start)
+            
+        for cell in stack:
+            new_maze[cell[0], cell[1]] = 1
+            
         while len(stack) > 0:
             loc = stack.pop(0)
             walls = self.decode_cell(maze[loc[0], loc[1], 0])
-        for i in range(4):
-            check_loc = self.decode_heading(i, loc)
-            if (max(check_loc) < maze_size) and (2**i not in walls):
-                if new_maze[check_loc[0], check_loc[1]] == 0:
-                    stack.append(check_loc)
-                    new_maze[check_loc[0], check_loc[1]] = new_maze[loc[0], loc[1]] + 1
-        print new_maze
-        maze[:,:,1] = new_maze - 1
+            for i in range(4):
+                transform = self.decode_heading(i)
+                x = loc[0] + transform[0]
+                y = loc[1] + transform[1]
+                if (max((x,y)) < maze_size) and (2**i not in walls):
+                    if new_maze[x, y] == 0:
+                        new_loc = (x, y)
+                        stack.append(new_loc)
+                        new_maze[x, y] = new_maze[loc[0], loc[1]] + 1
+        maze[:,:,2] = new_maze
         return maze
 
 
-    def waterfall_choice(self, maze, location, heading):
+    def waterfall_choice(self, maze, heading, location):
         neighbors = self.waterfall_neighbors(maze, location)
-        min_value = min(neighbors)
-        if neighbors[heading] == min_value:
-            return heading
+        if self.outbound:
+            value = min(neighbors)
+            no_pass = 255
         else:
-            return neighbors.index(min_value)
+            value = max(neighbors)
+            no_pass = 0
+        
+        if neighbors[heading] == value:
+            new_heading = heading    
+            rotation = 0
+        else:
+            new_heading = neighbors.index(value)
+            if ((heading+1)%4) == new_heading:
+                rotation = 90
+            else:
+                rotation = -90
+
+        if 2**new_heading in self.decode_cell(maze[location[0], location[1], 0]):
+            movement = 0
+        else:
+            movement = 1
+        #print neighbors, value, neighbors[heading], heading, new_heading, rotation, movement
+        return rotation, movement
 
 
     def waterfall_neighbors(self, maze, location):
         maze_size = maze.shape[0]
         walls = self.decode_cell(maze[location[0], location[1], 0])
         neighbors = list()
+        no_pass = 255
+        if not self.outbound:
+            modifier = 0
         for i in range(4):
-            check_loc = self.decode_heading(i, location)
-            if (max(check_loc) < maze_size) and (2**i not in walls):
-                dist = maze[check_loc[0], check_loc[1], 1]
-                if self.exploring:
-                    visits = maze[check_loc[0], check_loc[1], 2]
-                elif maze[check_loc[0], check_loc[1], 2] == 0:
-                    visits = 100
-                else: 
-                    visits = maze[check_loc[0], check_loc[1], 2]
-                neighbors.append(dist + visits)
+            transform = self.decode_heading(i)
+            x = location[0] + transform[0]
+            y = location[1] + transform[1]
+            if (max((x, y)) < maze_size) and (2**i not in walls):
+                neighbors.append(maze[x, y, 2])
             else:
-                neighbors.append(255)
+                neighbors.append(no_pass)
         return neighbors
-
-    
-    def waterfall(self, maze, location, heading):
-        if (self.maze[self.location[0], self.location[1], 1] == 0):
-            self.exporing = False
-            self.location = (0,0)
-            self.heading = 0
-            return 'Reset', 'Reset'
-        
-        self.maze[:,:,0] = self.update_maze(self.maze[:,:,0], self.heading, self.location, sensors)
-                
-        for i in range(movement):
-            if self.check_movement(self.heading, self.maze[self.location[0], self.location[1], 0]):
-                if movement < 0:
-                    self.location = self.decode_heading((self.heading+2)%4, self.location)
-                else:
-                    self.location = self.decode_heading(self.heading, self.location)
-                self.maze[self.location[0], self.location[1], 2] += 1
-#        _ = raw_input(self.maze[:,:,0])
-
-        self.maze = self.waterfall_update(maze)
-        new_head = self.waterfall_choice(maze, location, heading)
-        head_turn_left = {0:3, 1:0, 2:1, 3:2}
-        if new_head == heading:
-            rotation = 0
-        elif new_head == head_turn_left[heading]:
-            rotation = -1
-        elif heading == head_turn_left[new_head]:
-            rotation = 1
-        else:
-            return 1, 0
-
-        movement = 1
-        new_loc = location
-        while self.exploring:
-            new_loc = self.decode_heading(new_head, new_loc)
-            new_heading = self.waterfall_choice(maze, new_loc, new_head)
-            if (new_heading != new_head) or movement > 2:
-                return rotation, movement
-            else:
-                movement += 1
-        return rotation, movement
 
     
 # ********************************************************************************************************
