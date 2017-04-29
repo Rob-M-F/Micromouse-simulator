@@ -63,3 +63,9 @@ Experimental phases:
 - Would the intended audience of your project be able to understand your proposal?
 - Have you properly proofread your proposal to assure there are minimal grammatical and spelling mistakes?
 - Are all the resources used for this project correctly cited and referenced?
+
+                  12x12      14x14     16x16
+Random_choice    313.333   Exceeded  Exceeded
+Wall_follower    100.633    272.733   137.933
+Basic_waterfall   53.433     63.567    79.933
+Double_waterfall  37.067     58.333    59.433
