@@ -175,6 +175,7 @@ class Basic_waterfall(Algorithm):
         self.maze = self.blank_maze(maze_dim, map_layers=3, goal=self.goal)
         self.valid_walls = [1, 2, 4, 8] # Set maze wall values [North, East, South, West]
         self.dead_ends = [7, 11, 13, 14]
+        self.location = start
         
     
     def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
@@ -185,13 +186,13 @@ class Basic_waterfall(Algorithm):
         self.maze = self.waterfall_update(self.maze)
         visits = self.get_visits(self.maze, location)
 
-        if (location in self.goal) and self.outbound: # If goal is reached, return to start
-            self.outbound = False
-
         if (location in self.start) and not self.outbound: # If goal has been reached and back at start, end run.
             self.outbound = True
             self.exploring = False
             return 'Reset', 'Reset'
+
+        if (location in self.goal) and self.outbound: # If goal is reached, return to start
+            self.outbound = False
 
         return self.waterfall_choice(self.maze, heading, location)
         
@@ -226,28 +227,30 @@ class Basic_waterfall(Algorithm):
 
     def waterfall_choice(self, maze, heading, location):
         neighbors = self.waterfall_neighbors(maze, location)
-        if self.outbound:
-            value = min(neighbors)
-            no_pass = 255
-        else:
-            value = max(neighbors)
-            no_pass = 0
-        
-        if neighbors[heading] == value:
-            new_heading = heading    
+        if heading in neighbors:
+            new_heading = heading
             rotation = 0
-        else:
-            new_heading = neighbors.index(value)
-            if ((heading+1)%4) == new_heading:
-                rotation = 90
-            else:
-                rotation = -90
-
-        if 2**new_heading in self.decode_cell(maze[location[0], location[1], 0]):
-            movement = 0
-        else:
             movement = 1
-        #print neighbors, value, neighbors[heading], heading, new_heading, rotation, movement
+        elif (heading+1)%4 in neighbors:
+            new_heading = (heading+1)%4
+            rotation = 90
+            movement = 1
+        elif (heading+3)%4 in neighbors:
+            new_heading = (heading+3)%4
+            rotation = -90
+            movement = 1
+        else:
+            new_heading = (heading+3)%4
+            rotation = -90
+            movement = 0
+        transform = self.decode_heading(new_heading)
+        loc = (self.location[0] + movement*transform[0], self.location[1] + movement*transform[1])
+        print location, loc, heading, new_heading, rotation, movement, self.outbound
+        if self.location != location:
+            print self.location, location
+            print '********************************************'
+#        a = raw_input()
+        self.location = loc
         return rotation, movement
 
 
@@ -255,9 +258,6 @@ class Basic_waterfall(Algorithm):
         maze_size = maze.shape[0]
         walls = self.decode_cell(maze[location[0], location[1], 0])
         neighbors = list()
-        no_pass = 255
-        if not self.outbound:
-            modifier = 0
         for i in range(4):
             transform = self.decode_heading(i)
             x = location[0] + transform[0]
@@ -265,8 +265,14 @@ class Basic_waterfall(Algorithm):
             if (max((x, y)) < maze_size) and (2**i not in walls):
                 neighbors.append(maze[x, y, 2])
             else:
-                neighbors.append(no_pass)
-        return neighbors
+                neighbors.append(255)
+        value = min(neighbors)
+        valued_neighbors = list()
+        for n, neighbor in enumerate(neighbors):
+            if neighbor == value:
+                valued_neighbors.append(n)
+        print neighbors, valued_neighbors,
+        return valued_neighbors
 
     
 # ********************************************************************************************************
