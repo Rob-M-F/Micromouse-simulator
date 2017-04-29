@@ -1,5 +1,5 @@
 import numpy as np
-from algorithms import Wall_follower, Basic_waterfall
+from algorithms import Wall_follower, Basic_waterfall, Double_waterfall
 import turtle
 from maze import Maze
 
@@ -20,15 +20,15 @@ class Robot(object):
         movement:   integer from 0 - 3 inclusive, indicating the number of cells to move in the new direction.
         walls: distance to sensed walls, in cells (-1 represents blind spot)
     """
-    def __init__(self, maze_dim, alg_choice="default", goal=None):
+    def __init__(self, maze_dim, alg_choice=2, goal=None):
         if goal == None:
             center = maze_dim // 2
             self.goal = [(center, center), (center, center-1), (center-1, center), (center-1, center-1)]
         else:
             self.goal = [goal]
-
-        # self.algorithm = self
-        self.algorithm = Basic_waterfall(maze_dim, self.goal)
+        if alg_choice != 0:
+            algo_init = {1:Wall_follower, 2:Basic_waterfall, 3:Double_waterfall}
+            self.algorithm = algo_init[alg_choice](maze_dim, self.goal)
             
         self.location = (0, 0)
         self.heading = 0
