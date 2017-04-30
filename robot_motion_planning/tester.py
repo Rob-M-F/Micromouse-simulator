@@ -36,7 +36,7 @@ if __name__ == '__main__':
     center = maze_dim // 2
     goal = [(center, center), (center, center-1), (center-1, center), (center-1, center-1)]
     
-    for i in range(5):
+    for i in range(0,1):
         # Intitialize a robot; robot receives info about maze dimensions.
         algorithm = algorithms[i](maze_dim, goal)
         testrobot = Robot(testmaze.get_dim(), algorithm)

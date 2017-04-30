@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 
 class Algorithm(object):
     """
@@ -166,30 +167,49 @@ class Wall_follower(Algorithm):
 # ********************************************************************************************************
 
 
-class Search_waterfall(Algorithm):
+class Search_waterfall(Algorithm): # Perfect score benchmark
     def __init__(self, maze_dim, goal, start = (0, 0)):
         # Set state (Exploration / Speed)
         self.maze_dim = maze_dim
-        self.goal = list(goal)
-        self.start = list(start)
-        self.exploring = True
-        self.maze = self.blank_maze(maze_dim, map_layers=2, goal=self.goal)
+        self.goal = goal
+        self.start = [start]
+        self.maze = self.blank_maze(maze_dim, map_layers=1, goal=self.goal)
         self.valid_walls = [1, 2, 4, 8] # Set maze wall values [North, East, South, West]
-        self.plan_stack = list()
-    
+        self.plan = deque()
+        self.exploring = True
+        
     
     def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
         """ Determine the next action to take in searching for the goal. """
-
-        self.maze = self.update_maze(self.maze, walls, location)
-        waterfall = self.waterfall_update(self.maze)
-        
-
-        if (location in self.goal): # If goal has been reached and back at start, end run.
-            return 'Reset', 'Reset'
-
-        return self.waterfall_choice(waterfall, heading, location)
-    
+        if self.exploring:
+            self.maze = self.update_maze(self.maze, walls, location)
+            waterfall = self.waterfall_update(self.maze)
+            if (location in self.goal): # If goal has been reached and back at start, end run.
+                self.exploring = False
+                self.plan = self.route_planner(waterfall)
+                return 'Reset', 'Reset'
+            rotation = 0
+            movement = 0
+            x = location[0]
+            y = location[1]
+            h = heading
+            for i in range(3):
+                rotate, move = self.waterfall_choice(waterfall, h, (x, y))
+                h = self.decode_rotation(h, rotate)
+                transform = self.decode_heading(h)
+                x += transform[0]
+                y += transform[1]
+                if i == 0:
+                    rotation = rotate
+                    movement = move
+                elif rotate == 0:
+                    movement += 1
+                else:
+                    break
+                if move == 0:
+                    break
+            return rotation, movement
+        return self.plan.popleft()
     
     def decode_rotation(self, heading, rotation):
         if rotation == 0:
@@ -198,7 +218,6 @@ class Search_waterfall(Algorithm):
             return (heading+1)%4
         if rotation == -90:
             return (heading+3)%4
-    
     
     def waterfall_update(self, maze):
         """ Update the waterfall map to reflect new information. To return to start, recalcuate the map from start. """
@@ -226,41 +245,23 @@ class Search_waterfall(Algorithm):
 
     def waterfall_choice(self, waterfall, heading, location):
         """ Evaluate the current waterfall map and plan the next action """
-        rotation = 0
-        movement = 0
-        x = location[0]
-        y = location[1]
-        h = heading
-        for i in range(3):
-            neighbors = self.waterfall_neighbors(waterfall, (x, y))
-            rotate = -90
-            move = 1
-            if h in neighbors: rotation = 0
-            elif (h+1)%4 in neighbors: rotate = 90
-            elif (h+3)%4 in neighbors: rotate = -90
-            else: move = 0
-                
-            if i == 0:
-                rotation = rotate
-                movement = move
-            elif rotate == 0:
-                movement += 1
-            else:
-                break
-            if move == 0:
-                break
-            maze[x, y, 1] += 1
-            h = self.decode_rotation(h, rotate)
-            transform = self.decode_heading(h)
-            x += transform[0]
-            y += transform[1]
+        neighbors = self.waterfall_neighbors(waterfall, location)
+        rotation = -90
+        movement = 1
+        if heading in neighbors: rotation = 0
+        elif (heading+1)%4 in neighbors: rotation = 90
+        elif (heading+3)%4 in neighbors: rotation = -90
+        else: movement = 0
         return rotation, movement
 
-    def waterfall_neighbors(self, waterfall, location):
+
+    def waterfall_neighbors(self, waterfall, location, all=False):
         """ Examine the neighboring cells and return those which are equally good choices """
         maze_size = waterfall.shape[0]
+        current = waterfall[location[0], location[1]]
         walls = self.decode_cell(self.maze[location[0], location[1], 0])
         neighbors = list()
+        no_pass = 255
         for i in range(4):
             transform = self.decode_heading(i)
             x = location[0] + transform[0]
@@ -268,14 +269,72 @@ class Search_waterfall(Algorithm):
             if (max((x, y)) < maze_size) and (2**i not in walls):
                 neighbors.append(waterfall[x, y])
             else:
-                neighbors.append(255)
-        return [n for n, neighbor in enumerate(neighbors) if neighbor == min(neighbors)]
-    
+                neighbors.append(no_pass)
+        if all:
+            return [n for n, neighbor in enumerate(neighbors) if neighbor <= current]
+        else:
+            return [n for n, neighbor in enumerate(neighbors) if neighbor == min(neighbors)]
+
+        
+    def heading_to_rotation(self, heading, new_heading):
+        if heading == new_heading:
+            rotate = 0
+        elif (heading+1)%4 == new_heading:
+            rotate = 90
+        elif (heading+3)%4 == new_heading:
+            rotate = -90
+        else:
+            rotate = "None"
+        return rotate
+     
     
     def route_planner(self, waterfall):
-        return self.plan_stack
-
-
+        process_stack = self.route_mapper(waterfall, (0,0), 0)
+        plan_stack = deque()
+        while process_stack:
+            plan = process_stack.popleft()
+            rotate = 0
+            move = 0
+            new_plan = deque()
+            while plan:
+                step = plan.popleft()
+                next_step = (rotate, move)
+                if (step[0] == 0) and move < 3:
+                    move += 1
+                else:
+                    new_plan.append(next_step)
+                    rotate = step[0]
+                    move = step[1]
+            new_plan.append(next_step)
+            plan_stack.append(new_plan)
+            plan = min(plan_stack, key=len)
+            print plan
+            print len(plan)
+        return plan
+    
+    
+    def route_mapper(self, waterfall, location, heading):
+        neighbors = self.waterfall_neighbors(waterfall, location, True)
+        plan_stack = deque()
+        if waterfall[location[0], location[1]] == 1:
+            base = deque([(0,0)])
+            plan_stack.append(base)
+        else:
+            for n in neighbors:
+                rotate = self.heading_to_rotation(heading, n)
+                step = (rotate, 1)
+                if rotate != "None":
+                    transform = self.decode_heading(n)
+                    x = location[0] + transform[0]
+                    y = location[1] + transform[1]
+                    plan = self.route_mapper(waterfall, (x, y), n)
+                    while plan:
+                        route = plan.pop()
+                        route.appendleft(step)
+                        plan_stack.append(route)
+        return plan_stack
+           
+        
     def get_name(self):
         return "Search Waterfall"
 
@@ -510,6 +569,7 @@ class Oracle_waterfall(Algorithm): # Perfect score benchmark
         self.start = [start]
         self.maze = self.blank_maze(maze_dim, map_layers=1, goal=self.goal)
         self.valid_walls = [1, 2, 4, 8] # Set maze wall values [North, East, South, West]
+        self.plan = deque()
 
         
     def maze_oracle(self, maze):
@@ -527,34 +587,13 @@ class Oracle_waterfall(Algorithm): # Perfect score benchmark
     
     def algorithm_choice(self, walls = list(), heading=0, location = (0, 0)):
         """ Determine the next action to take in searching for the goal. """
-
-        self.maze = self.update_maze(self.maze, walls, location)
-        waterfall = self.waterfall_update(self.maze)
-
+        if not self.plan:
+            waterfall = self.waterfall_update(self.maze)
+            self.plan = self.route_planner(waterfall)
         if (location in self.goal): # If goal has been reached and back at start, end run.
             return 'Reset', 'Reset'
-        rotation = 0
-        movement = 0
-        x = location[0]
-        y = location[1]
-        h = heading
-        for i in range(3):
-            rotate, move = self.waterfall_choice(waterfall, h, (x, y))
-            h = self.decode_rotation(h, rotate)
-            transform = self.decode_heading(h)
-            x += transform[0]
-            y += transform[1]
-            if i == 0:
-                rotation = rotate
-                movement = move
-            elif rotate == 0:
-                movement += 1
-            else:
-                break
-            if move == 0:
-                break
-        return rotation, movement
-    
+
+        return self.plan.popleft()
     
     def decode_rotation(self, heading, rotation):
         if rotation == 0:
@@ -600,11 +639,13 @@ class Oracle_waterfall(Algorithm): # Perfect score benchmark
         return rotation, movement
 
 
-    def waterfall_neighbors(self, waterfall, location):
+    def waterfall_neighbors(self, waterfall, location, all=False):
         """ Examine the neighboring cells and return those which are equally good choices """
         maze_size = waterfall.shape[0]
+        current = waterfall[location[0], location[1]]
         walls = self.decode_cell(self.maze[location[0], location[1], 0])
         neighbors = list()
+        no_pass = 255
         for i in range(4):
             transform = self.decode_heading(i)
             x = location[0] + transform[0]
@@ -612,10 +653,70 @@ class Oracle_waterfall(Algorithm): # Perfect score benchmark
             if (max((x, y)) < maze_size) and (2**i not in walls):
                 neighbors.append(waterfall[x, y])
             else:
-                neighbors.append(255)
-        return [n for n, neighbor in enumerate(neighbors) if neighbor == min(neighbors)]
+                neighbors.append(no_pass)
+        if all:
+            return [n for n, neighbor in enumerate(neighbors) if neighbor <= current]
+        else:
+            return [n for n, neighbor in enumerate(neighbors) if neighbor == min(neighbors)]
 
-            
+        
+    def heading_to_rotation(self, heading, new_heading):
+        if heading == new_heading:
+            rotate = 0
+        elif (heading+1)%4 == new_heading:
+            rotate = 90
+        elif (heading+3)%4 == new_heading:
+            rotate = -90
+        else:
+            rotate = "None"
+        return rotate
+     
+    
+    def route_planner(self, waterfall):
+        process_stack = self.route_mapper(waterfall, (0,0), 0)
+        plan_stack = deque()
+        while process_stack:
+            plan = process_stack.popleft()
+            rotate = 0
+            move = 0
+            new_plan = deque()
+            while plan:
+                step = plan.popleft()
+                next_step = (rotate, move)
+                if (step[0] == 0) and move < 3:
+                    move += 1
+                else:
+                    new_plan.append(next_step)
+                    rotate = step[0]
+                    move = step[1]
+            new_plan.append(next_step)
+            plan_stack.append(new_plan)
+            plan = min(plan_stack, key=len)
+        return plan
+    
+    
+    def route_mapper(self, waterfall, location, heading):
+        neighbors = self.waterfall_neighbors(waterfall, location, True)
+        plan_stack = deque()
+        if waterfall[location[0], location[1]] == 1:
+            base = deque([(0,0)])
+            plan_stack.append(base)
+        else:
+            for n in neighbors:
+                rotate = self.heading_to_rotation(heading, n)
+                step = (rotate, 1)
+                if rotate != "None":
+                    transform = self.decode_heading(n)
+                    x = location[0] + transform[0]
+                    y = location[1] + transform[1]
+                    plan = self.route_mapper(waterfall, (x, y), n)
+                    while plan:
+                        route = plan.pop()
+                        route.appendleft(step)
+                        plan_stack.append(route)
+        return plan_stack
+           
+        
     def get_name(self):
         return "Oracle Waterfall"
             
