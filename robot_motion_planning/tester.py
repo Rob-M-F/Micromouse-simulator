@@ -1,6 +1,6 @@
 from maze import Maze
 from showmaze import display_maze, display_robot
-from algorithms import Oracle_waterfall, Wall_follower, Basic_waterfall, Double_waterfall, Search_waterfall
+from algorithms import Oracle_waterfall, Algorithm, Waterfall, Search_waterfall
 from robot import Robot
 import sys
 
@@ -30,13 +30,13 @@ if __name__ == '__main__':
     
     if draw: draw_maze = display_maze(testmaze, 40)
     
-    algorithms = {0:Oracle_waterfall, 1:Wall_follower, 2:Basic_waterfall, 3:Double_waterfall, 4:Search_waterfall}
-    color = {0:"Black", 1:"Blue", 2:"Red", 3:"Green", 4:"White"}
+    algorithms = {0:Oracle_waterfall, 1:Algorithm, 2:Waterfall, 3:Search_waterfall}
+    color = {0:"Blue", 1:"Red", 2:"Green", 3:"White"}
     maze_dim = testmaze.get_dim()
     center = maze_dim // 2
     goal = [(center, center), (center, center-1), (center-1, center), (center-1, center-1)]
     
-    for i in range(0,1):
+    for i in range(4):
         # Intitialize a robot; robot receives info about maze dimensions.
         algorithm = algorithms[i](maze_dim, goal)
         testrobot = Robot(testmaze.get_dim(), algorithm)
@@ -47,6 +47,7 @@ if __name__ == '__main__':
         # Record robot performance over two runs.
         runtimes = []
         total_time = 0
+        print "*"*30
         for run in range(2):
             print "Starting ", algorithm.get_name(), " run {}, ".format(run)
 
@@ -136,4 +137,5 @@ if __name__ == '__main__':
         if len(runtimes) == 2:
             print "Task complete! Score: {:4.3f}".format(runtimes[1] + train_score_mult*runtimes[0])
 
+    print "*"*30
     draw_maze.get_window().exitonclick() # Draw maze then exit on click
