@@ -88,12 +88,18 @@ if __name__ == '__main__':
                 # perform rotation
                 if rotation == -90:
                     robot_pos['heading'] = dir_sensors[robot_pos['heading']][0]
-                    if draw: 
-                        draw_robot.move_bot(robot_pos['location'], rotation)
+                    if draw:
+                        if run == 0:
+                            draw_robot.move_bot(robot_pos['location'], rotation)
+                        else:
+                            draw_robot.track_bot(robot_pos['location'], rotation)
                 elif rotation == 90:
                     robot_pos['heading'] = dir_sensors[robot_pos['heading']][2]
                     if draw: 
-                        draw_robot.move_bot(robot_pos['location'], rotation)
+                        if run == 0:
+                            draw_robot.move_bot(robot_pos['location'], rotation)
+                        else:
+                            draw_robot.track_bot(robot_pos['location'], rotation)
                 elif rotation == 0:
                     pass
                 else:
@@ -122,7 +128,10 @@ if __name__ == '__main__':
                             print "Movement stopped by wall."
                             movement = 0
                     if draw: 
-                        draw_robot.move_bot(location=robot_pos['location'])
+                        if run == 0:
+                            draw_robot.move_bot(location=robot_pos['location'])
+                        else:
+                            draw_robot.track_bot(location=robot_pos['location'])
 
                 # check for goal entered
                 goal_bounds = [testmaze.dim/2 - 1, testmaze.dim/2]

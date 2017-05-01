@@ -116,6 +116,11 @@ class display_robot(object):
                 self.pen.goto(x_start, y_start + mod*i)
             self.pen.clearstamp(self.stamp)                
             self.stamp = self.pen.stamp()
+        
+    def track_bot(self, location, heading=0):
+        current_stamp = self.stamp
+        self.stamp = self.pen.stamp()
+        self.move_bot(location, heading)
 
         
 if __name__ == '__main__':
