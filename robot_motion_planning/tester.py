@@ -31,12 +31,12 @@ if __name__ == '__main__':
     if draw: draw_maze = display_maze(testmaze, 40)
     
     algorithms = {0:Oracle_waterfall, 1:Algorithm, 2:Waterfall, 3:Search_waterfall}
-    color = {0:"Blue", 1:"Red", 2:"Green", 3:"White"}
+    color = {0:"Blue", 1:"Red", 2:"Green", 3:"Orange"}
     maze_dim = testmaze.get_dim()
     center = maze_dim // 2
     goal = [(center, center), (center, center-1), (center-1, center), (center-1, center-1)]
     
-    for i in range(4):
+    for i in range(0, 4):
         # Intitialize a robot; robot receives info about maze dimensions.
         algorithm = algorithms[i](maze_dim, goal)
         testrobot = Robot(testmaze.get_dim(), algorithm)
@@ -92,14 +92,14 @@ if __name__ == '__main__':
                         if run == 0:
                             draw_robot.move_bot(robot_pos['location'], rotation)
                         else:
-                            draw_robot.track_bot(robot_pos['location'], rotation)
+                            draw_robot.move_bot(robot_pos['location'], rotation)
                 elif rotation == 90:
                     robot_pos['heading'] = dir_sensors[robot_pos['heading']][2]
                     if draw: 
                         if run == 0:
                             draw_robot.move_bot(robot_pos['location'], rotation)
                         else:
-                            draw_robot.track_bot(robot_pos['location'], rotation)
+                            draw_robot.move_bot(robot_pos['location'], rotation)
                 elif rotation == 0:
                     pass
                 else:
