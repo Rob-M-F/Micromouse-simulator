@@ -165,7 +165,7 @@ class Algorithm(object):
 # ********************************************************************************************************
 
 
-class Waterfall(Algorithm): # Perfect score benchmark
+class Waterfall(Algorithm): # Basic waterfall
     def __init__(self, maze_dim, goal, start = (0, 0)):
         super(Waterfall, self).__init__(maze_dim, goal, start)
         # Set state (Exploration / Speed)
@@ -245,53 +245,6 @@ class Waterfall(Algorithm): # Perfect score benchmark
             return [n for n, neighbor in enumerate(neighbors) if neighbor <= current]
         else:
             return [n for n, neighbor in enumerate(neighbors) if neighbor == min(neighbors)]
-     
-    
-    def route_planner(self, waterfall):
-        """ Convert mapped routes into movement optimized routes. """
-        process_stack = self.route_mapper(waterfall, (0,0), 0)
-        plan_stack = deque()
-        while process_stack:
-            plan = process_stack.popleft()
-            rotate = 0
-            move = 0
-            new_plan = deque()
-            while plan:
-                step = plan.popleft()
-                next_step = (rotate, move)
-                if (step[0] == 0) and move < 3:
-                    move += 1
-                else:
-                    new_plan.append(next_step)
-                    rotate = step[0]
-                    move = step[1]
-            if len(new_plan) > 1:
-                new_plan.append(next_step)
-            plan_stack.append(new_plan)       
-        return plan_stack
-    
-    
-    def route_mapper(self, waterfall, location, heading):
-        """ Recursively generate all descending routes from start to goal. """
-        neighbors = self.waterfall_neighbors(waterfall, location, True)
-        plan_stack = deque()
-        if waterfall[location[0], location[1]] == 1:
-            base = deque([(0,0)])
-            plan_stack.append(base)
-        else:
-            for n in neighbors:
-                rotate = self.heading_to_rotation(heading, n)
-                step = (rotate, 1)
-                if rotate != "None":
-                    transform = self.decode_heading(n)
-                    x = location[0] + transform[0]
-                    y = location[1] + transform[1]
-                    plan = self.route_mapper(waterfall, (x, y), n)
-                    while plan:
-                        route = plan.pop()
-                        route.appendleft(step)
-                        plan_stack.append(route)
-        return plan_stack
     
     
     def waterfall_update(self, maze, goal=None):
@@ -374,11 +327,59 @@ class Search_waterfall(Waterfall):
                     if self.maze[location[0], location[1], 1] == 0:
                         empty_cells.append(location)
         return empty_cells
+    
+    
+    def route_planner(self, waterfall):
+        """ Convert mapped routes into movement optimized routes. """
+        process_stack = self.route_mapper(waterfall, (0,0), 0)
+        plan_stack = deque()
+        while process_stack:
+            plan = process_stack.popleft()
+            rotate = 0
+            move = 0
+            new_plan = deque()
+            while plan:
+                step = plan.popleft()
+                next_step = (rotate, move)
+                if (step[0] == 0) and move < 3:
+                    move += 1
+                else:
+                    new_plan.append(next_step)
+                    rotate = step[0]
+                    move = step[1]
+            if len(new_plan) > 1:
+                new_plan.append(next_step)
+            plan_stack.append(new_plan)       
+        return plan_stack
+    
+    
+    def route_mapper(self, waterfall, location, heading):
+        """ Recursively generate all descending routes from start to goal. """
+        neighbors = self.waterfall_neighbors(waterfall, location, True)
+        plan_stack = deque()
+        if waterfall[location[0], location[1]] == 1:
+            base = deque([(0,0)])
+            plan_stack.append(base)
+        else:
+            for n in neighbors:
+                rotate = self.heading_to_rotation(heading, n)
+                step = (rotate, 1)
+                if rotate != "None":
+                    transform = self.decode_heading(n)
+                    x = location[0] + transform[0]
+                    y = location[1] + transform[1]
+                    plan = self.route_mapper(waterfall, (x, y), n)
+                    while plan:
+                        route = plan.pop()
+                        route.appendleft(step)
+                        plan_stack.append(route)
+        return plan_stack
+    
 
 # ********************************************************************************************************
 
 
-class Oracle_waterfall(Waterfall): # Perfect score by knowing the maze
+class Oracle_waterfall(Search_waterfall): # Perfect score by knowing the maze
     def __init__(self, maze_dim, goal, start = (0, 0)):
         super(Oracle_waterfall, self).__init__(maze_dim, goal, start)
         self.name = "Oracle Waterfall"

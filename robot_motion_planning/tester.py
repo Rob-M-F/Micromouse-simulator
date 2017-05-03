@@ -29,7 +29,6 @@ if __name__ == '__main__':
     testmaze = Maze( str(sys.argv[1]))
     
     if draw: draw_maze = display_maze(testmaze, 40)
-    
     algorithms = {0:Oracle_waterfall, 1:Algorithm, 2:Waterfall, 3:Search_waterfall}
     color = {0:"Blue", 1:"Red", 2:"Green", 3:"Orange"}
     maze_dim = testmaze.get_dim()
