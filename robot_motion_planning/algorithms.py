@@ -71,7 +71,7 @@ class Algorithm(object):
         """ Update maze representation to reflect current sensor data. """
         
         for w, wall in enumerate(walls):
-            if wall == 0: # If this heading is not a blind spot
+            if wall == 0: # If this cell has a wall in the given direction.
                 x = location[0]
                 y = location[1]
                 maze[x, y, 0] = self.mark_wall(maze[x, y, 0], w) # Mark visible wall
